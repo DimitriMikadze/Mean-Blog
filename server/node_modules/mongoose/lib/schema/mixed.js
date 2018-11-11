@@ -1,4 +1,3 @@
-
 /*!
  * Module dependencies.
  */
@@ -12,22 +11,20 @@ var utils = require('../utils');
  * @param {String} path
  * @param {Object} options
  * @inherits SchemaType
- * @api private
+ * @api public
  */
 
-function Mixed (path, options) {
+function Mixed(path, options) {
   if (options && options.default) {
     var def = options.default;
-    if (Array.isArray(def) && 0 === def.length) {
+    if (Array.isArray(def) && def.length === 0) {
       // make sure empty array defaults are handled
       options.default = Array;
-    } else if (!options.shared &&
-               utils.isObject(def) &&
-               0 === Object.keys(def).length) {
+    } else if (!options.shared && utils.isObject(def) && Object.keys(def).length === 0) {
       // prevent odd "shared" objects between documents
-      options.default = function () {
-        return {}
-      }
+      options.default = function() {
+        return {};
+      };
     }
   }
 
@@ -38,25 +35,15 @@ function Mixed (path, options) {
  * This schema type's name, to defend against minifiers that mangle
  * function names.
  *
- * @api private
+ * @api public
  */
 Mixed.schemaName = 'Mixed';
 
 /*!
  * Inherits from SchemaType.
  */
-Mixed.prototype = Object.create( SchemaType.prototype );
+Mixed.prototype = Object.create(SchemaType.prototype);
 Mixed.prototype.constructor = Mixed;
-
-/**
- * Required validator
- *
- * @api private
- */
-
-Mixed.prototype.checkRequired = function (val) {
-  return (val !== undefined) && (val !== null);
-};
 
 /**
  * Casts `val` for Mixed.
@@ -67,7 +54,7 @@ Mixed.prototype.checkRequired = function (val) {
  * @api private
  */
 
-Mixed.prototype.cast = function (val) {
+Mixed.prototype.cast = function(val) {
   return val;
 };
 
@@ -79,8 +66,10 @@ Mixed.prototype.cast = function (val) {
  * @api private
  */
 
-Mixed.prototype.castForQuery = function ($cond, val) {
-  if (arguments.length === 2) return val;
+Mixed.prototype.castForQuery = function($cond, val) {
+  if (arguments.length === 2) {
+    return val;
+  }
   return $cond;
 };
 

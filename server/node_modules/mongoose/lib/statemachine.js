@@ -12,8 +12,8 @@ var utils = require('./utils');
  * @api private
  */
 
-var StateMachine = module.exports = exports = function StateMachine () {
-}
+var StateMachine = module.exports = exports = function StateMachine() {
+};
 
 /*!
  * StateMachine.ctor('state1', 'state2', ...)
@@ -29,17 +29,17 @@ var StateMachine = module.exports = exports = function StateMachine () {
  * @private
  */
 
-StateMachine.ctor = function () {
+StateMachine.ctor = function() {
   var states = utils.args(arguments);
 
-  var ctor = function () {
+  var ctor = function() {
     StateMachine.apply(this, arguments);
     this.paths = {};
     this.states = {};
     this.stateNames = states;
 
-    var i = states.length
-      , state;
+    var i = states.length,
+        state;
 
     while (i--) {
       state = states[i];
@@ -49,11 +49,11 @@ StateMachine.ctor = function () {
 
   ctor.prototype = new StateMachine();
 
-  states.forEach(function (state) {
+  states.forEach(function(state) {
     // Changes the `path`'s state to `state`.
-    ctor.prototype[state] = function (path) {
+    ctor.prototype[state] = function(path) {
       this._changeState(path, state);
-    }
+    };
   });
 
   return ctor;
@@ -69,29 +69,29 @@ StateMachine.ctor = function () {
  * @api private
  */
 
-StateMachine.prototype._changeState = function _changeState (path, nextState) {
+StateMachine.prototype._changeState = function _changeState(path, nextState) {
   var prevBucket = this.states[this.paths[path]];
   if (prevBucket) delete prevBucket[path];
 
   this.paths[path] = nextState;
   this.states[nextState][path] = true;
-}
+};
 
 /*!
  * ignore
  */
 
-StateMachine.prototype.clear = function clear (state) {
-  var keys = Object.keys(this.states[state])
-    , i = keys.length
-    , path
+StateMachine.prototype.clear = function clear(state) {
+  var keys = Object.keys(this.states[state]),
+      i = keys.length,
+      path;
 
   while (i--) {
     path = keys[i];
     delete this.states[state][path];
     delete this.paths[path];
   }
-}
+};
 
 /*!
  * Checks to see if at least one path is in the states passed in via `arguments`
@@ -101,13 +101,13 @@ StateMachine.prototype.clear = function clear (state) {
  * @private
  */
 
-StateMachine.prototype.some = function some () {
-  var self = this;
+StateMachine.prototype.some = function some() {
+  var _this = this;
   var what = arguments.length ? arguments : this.stateNames;
-  return Array.prototype.some.call(what, function (state) {
-    return Object.keys(self.states[state]).length;
+  return Array.prototype.some.call(what, function(state) {
+    return Object.keys(_this.states[state]).length;
   });
-}
+};
 
 /*!
  * This function builds the functions that get assigned to `forEach` and `map`,
@@ -118,25 +118,25 @@ StateMachine.prototype.some = function some () {
  * @api private
  */
 
-StateMachine.prototype._iter = function _iter (iterMethod) {
-  return function () {
-    var numArgs = arguments.length
-      , states = utils.args(arguments, 0, numArgs-1)
-      , callback = arguments[numArgs-1];
+StateMachine.prototype._iter = function _iter(iterMethod) {
+  return function() {
+    var numArgs = arguments.length,
+        states = utils.args(arguments, 0, numArgs - 1),
+        callback = arguments[numArgs - 1];
 
     if (!states.length) states = this.stateNames;
 
-    var self = this;
+    var _this = this;
 
-    var paths = states.reduce(function (paths, state) {
-      return paths.concat(Object.keys(self.states[state]));
+    var paths = states.reduce(function(paths, state) {
+      return paths.concat(Object.keys(_this.states[state]));
     }, []);
 
-    return paths[iterMethod](function (path, i, paths) {
+    return paths[iterMethod](function(path, i, paths) {
       return callback(path, i, paths);
     });
   };
-}
+};
 
 /*!
  * Iterates over the paths that belong to one of the parameter states.
@@ -152,10 +152,10 @@ StateMachine.prototype._iter = function _iter (iterMethod) {
  * @private
  */
 
-StateMachine.prototype.forEach = function forEach () {
+StateMachine.prototype.forEach = function forEach() {
   this.forEach = this._iter('forEach');
   return this.forEach.apply(this, arguments);
-}
+};
 
 /*!
  * Maps over the paths that belong to one of the parameter states.
@@ -172,8 +172,7 @@ StateMachine.prototype.forEach = function forEach () {
  * @private
  */
 
-StateMachine.prototype.map = function map () {
+StateMachine.prototype.map = function map() {
   this.map = this._iter('map');
   return this.map.apply(this, arguments);
-}
-
+};

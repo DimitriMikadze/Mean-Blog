@@ -1,4 +1,3 @@
-
 // import async to make control flow simplier
 var async = require('async');
 
@@ -11,42 +10,66 @@ var Person = mongoose.model('Person');
 
 // define some dummy data
 var data = [
-  { name : 'bill', age : 25, birthday : new Date().setFullYear((new
-    Date().getFullYear() - 25)), gender : "Male" },
-  { name : 'mary', age : 30, birthday : new Date().setFullYear((new
-    Date().getFullYear() - 30)), gender : "Female" },
-  { name : 'bob', age : 21, birthday : new Date().setFullYear((new
-    Date().getFullYear() - 21)), gender : "Male" },
-  { name : 'lilly', age : 26, birthday : new Date().setFullYear((new
-    Date().getFullYear() - 26)), gender : "Female" },
-  { name : 'alucard', age : 1000, birthday : new Date().setFullYear((new
-    Date().getFullYear() - 1000)), gender : "Male" },
+  {
+    name: 'bill',
+    age: 25,
+    birthday: new Date().setFullYear((new Date().getFullYear() - 25)),
+    gender: 'Male'
+  },
+  {
+    name: 'mary',
+    age: 30,
+    birthday: new Date().setFullYear((new Date().getFullYear() - 30)),
+    gender: 'Female'
+  },
+  {
+    name: 'bob',
+    age: 21,
+    birthday: new Date().setFullYear((new Date().getFullYear() - 21)),
+    gender: 'Male'
+  },
+  {
+    name: 'lilly',
+    age: 26,
+    birthday: new Date().setFullYear((new Date().getFullYear() - 26)),
+    gender: 'Female'
+  },
+  {
+    name: 'alucard',
+    age: 1000,
+    birthday: new Date().setFullYear((new Date().getFullYear() - 1000)),
+    gender: 'Male'
+  }
 ];
 
 
-mongoose.connect('mongodb://localhost/persons', function (err) {
+mongoose.connect('mongodb://localhost/persons', function(err) {
   if (err) throw err;
 
   // create all of the dummy people
-  async.each(data, function (item, cb) {
+  async.each(data, function(item, cb) {
     Person.create(item, cb);
-  }, function (err) {
-     
+  }, function(err) {
+    if (err) {
+      // handle error
+    }
+
     // alright, simple map reduce example. We will find the total ages of each
     // gender
 
     // create the options object
     var o = {};
 
-    o.map = function () {
+    o.map = function() {
       // in this function, 'this' refers to the current document being
-      // processed. Return the (gender, age) tuple using emit()
+      // processed. Return the (gender, age) tuple using
+      /* global emit */
       emit(this.gender, this.age);
     };
 
     // the reduce function receives the array of ages that are grouped by the
     // id, which in this case is the gender
-    o.reduce = function (id, ages) {
+    o.reduce = function(id, ages) {
       return Array.sum(ages);
     };
 
@@ -62,8 +85,8 @@ mongoose.connect('mongodb://localhost/persons', function (err) {
     // o.out = {}; // objects to specify where output goes, by default is
                    // returned, but can also be stored in a new collection
                    // see: http://mongoosejs.com/docs/api.html#model_Model.mapReduce
-    Person.mapReduce(o, function (err, results, stats) {
-      console.log("map reduce took %d ms", stats.processtime);
+    Person.mapReduce(o, function(err, results, stats) {
+      console.log('map reduce took %d ms', stats.processtime);
       console.log(results);
       cleanup();
     });

@@ -1,12 +1,15 @@
+/* eslint no-empty: 1 */
 
 /*!
  * Module dependencies.
  */
 
-var Stream = require('stream').Stream
-var utils = require('./utils')
-var helpers = require('./queryhelpers')
-var K = function(k){ return k }
+var Stream = require('stream').Stream;
+var utils = require('./utils');
+var helpers = require('./queryhelpers');
+var K = function(k) {
+  return k;
+};
 
 /**
  * Provides a Node.js 0.8 style [ReadStream](http://nodejs.org/docs/v0.8.21/api/stream.html#stream_readable_stream) interface for Queries.
@@ -49,7 +52,7 @@ var K = function(k){ return k }
  * @api public
  */
 
-function QueryStream (query, options) {
+function QueryStream(query, options) {
   Stream.call(this);
 
   this.query = query;
@@ -61,14 +64,14 @@ function QueryStream (query, options) {
   this._buffer = null;
   this._inline = T_INIT;
   this._running = false;
-  this._transform = options && 'function' == typeof options.transform
-    ? options.transform
-    : K;
+  this._transform = options && typeof options.transform === 'function'
+      ? options.transform
+      : K;
 
   // give time to hook up events
-  var self = this;
-  process.nextTick(function () {
-    self._init();
+  var _this = this;
+  process.nextTick(function() {
+    _this._init();
   });
 }
 
@@ -107,29 +110,33 @@ var T_CONT = 2;
  * @api private
  */
 
-QueryStream.prototype._init = function () {
-  if (this._destroyed) return;
+QueryStream.prototype._init = function() {
+  if (this._destroyed) {
+    return;
+  }
 
-  var query = this.query
-    , model = query.model
-    , options = query._optionsForExec(model)
-    , self = this
+  var query = this.query,
+      model = query.model,
+      options = query._optionsForExec(model),
+      _this = this;
 
   try {
     query.cast(model);
   } catch (err) {
-    return self.destroy(err);
+    return _this.destroy(err);
   }
 
-  self._fields = utils.clone(query._fields);
-  options.fields = query._castFields(self._fields);
+  _this._fields = utils.clone(query._fields);
+  options.fields = query._castFields(_this._fields);
 
-  model.collection.find(query._conditions, options, function (err, cursor) {
-    if (err) return self.destroy(err);
-    self._cursor = cursor;
-    self._next();
+  model.collection.find(query._conditions, options, function(err, cursor) {
+    if (err) {
+      return _this.destroy(err);
+    }
+    _this._cursor = cursor;
+    _this._next();
   });
-}
+};
 
 /**
  * Trampoline for pulling the next doc from cursor.
@@ -138,24 +145,26 @@ QueryStream.prototype._init = function () {
  * @api private
  */
 
-QueryStream.prototype._next = function _next () {
+QueryStream.prototype._next = function _next() {
   if (this.paused || this._destroyed) {
-    return this._running = false;
+    this._running = false;
+    return this._running;
   }
 
   this._running = true;
 
   if (this._buffer && this._buffer.length) {
     var arg;
-    while (!this.paused && !this._destroyed && (arg = this._buffer.shift())) {
+    while (!this.paused && !this._destroyed && (arg = this._buffer.shift())) { // eslint-disable-line no-cond-assign
       this._onNextObject.apply(this, arg);
     }
   }
 
   // avoid stack overflows with large result sets.
   // trampoline instead of recursion.
-  while (this.__next()) {}
-}
+  while (this.__next()) {
+  }
+};
 
 /**
  * Pulls the next doc from the cursor.
@@ -164,28 +173,29 @@ QueryStream.prototype._next = function _next () {
  * @api private
  */
 
-QueryStream.prototype.__next = function () {
-  if (this.paused || this._destroyed)
-    return this._running = false;
+QueryStream.prototype.__next = function() {
+  if (this.paused || this._destroyed) {
+    this._running = false;
+    return this._running;
+  }
 
-  var self = this;
-  self._inline = T_INIT;
+  var _this = this;
+  _this._inline = T_INIT;
 
-  self._cursor.nextObject(function cursorcb (err, doc) {
-    self._onNextObject(err, doc);
+  _this._cursor.nextObject(function cursorcb(err, doc) {
+    _this._onNextObject(err, doc);
   });
 
   // if onNextObject() was already called in this tick
   // return ourselves to the trampoline.
   if (T_CONT === this._inline) {
     return true;
-  } else {
-    // onNextObject() hasn't fired yet. tell onNextObject
-    // that its ok to call _next b/c we are not within
-    // the trampoline anymore.
-    this._inline = T_IDLE;
   }
-}
+  // onNextObject() hasn't fired yet. tell onNextObject
+  // that its ok to call _next b/c we are not within
+  // the trampoline anymore.
+  this._inline = T_IDLE;
+};
 
 /**
  * Transforms raw `doc`s returned from the cursor into a model instance.
@@ -195,16 +205,21 @@ QueryStream.prototype.__next = function () {
  * @api private
  */
 
-QueryStream.prototype._onNextObject = function _onNextObject (err, doc) {
-  if (this._destroyed) return;
+QueryStream.prototype._onNextObject = function _onNextObject(err, doc) {
+  if (this._destroyed) {
+    return;
+  }
 
   if (this.paused) {
     this._buffer || (this._buffer = []);
     this._buffer.push([err, doc]);
-    return this._running = false;
+    this._running = false;
+    return this._running;
   }
 
-  if (err) return this.destroy(err);
+  if (err) {
+    return this.destroy(err);
+  }
 
   // when doc is null we hit the end of the cursor
   if (!doc) {
@@ -215,30 +230,40 @@ QueryStream.prototype._onNextObject = function _onNextObject (err, doc) {
   var opts = this.query._mongooseOptions;
 
   if (!opts.populate) {
-    return true === opts.lean ?
-      emit(this, doc) :
-      createAndEmit(this, null, doc);
+    return opts.lean === true ?
+        emit(this, doc) :
+        createAndEmit(this, null, doc);
   }
 
-  var self = this;
-  var pop = helpers.preparePopulationOptionsMQ(self.query, self.query._mongooseOptions);
+  var _this = this;
+  var pop = helpers.preparePopulationOptionsMQ(_this.query, _this.query._mongooseOptions);
 
-  self.query.model.populate(doc, pop, function (err, doc) {
-    if (err) return self.destroy(err);
-    return true === opts.lean ?
-      emit(self, doc) :
-      createAndEmit(self, pop, doc);
+  // Hack to work around gh-3108
+  pop.forEach(function(option) {
+    delete option.model;
   });
-}
 
-function createAndEmit (self, populatedIds, doc) {
+  pop.__noPromise = true;
+  _this.query.model.populate(doc, pop, function(err, doc) {
+    if (err) {
+      return _this.destroy(err);
+    }
+    return opts.lean === true ?
+        emit(_this, doc) :
+        createAndEmit(_this, pop, doc);
+  });
+};
+
+function createAndEmit(self, populatedIds, doc) {
   var instance = helpers.createModel(self.query.model, doc, self._fields);
   var opts = populatedIds ?
-    { populated: populatedIds } :
+    {populated: populatedIds} :
     undefined;
 
-  instance.init(doc, opts, function (err) {
-    if (err) return self.destroy(err);
+  instance.init(doc, opts, function(err) {
+    if (err) {
+      return self.destroy(err);
+    }
     emit(self, instance);
   });
 }
@@ -247,7 +272,7 @@ function createAndEmit (self, populatedIds, doc) {
  * Emit a data event and manage the trampoline state
  */
 
-function emit (self, doc) {
+function emit(self, doc) {
   self.emit('data', self._transform(doc));
 
   // trampoline management
@@ -267,9 +292,9 @@ function emit (self, doc) {
  * @api public
  */
 
-QueryStream.prototype.pause = function () {
+QueryStream.prototype.pause = function() {
   this.paused = true;
-}
+};
 
 /**
  * Resumes this stream.
@@ -277,7 +302,7 @@ QueryStream.prototype.pause = function () {
  * @api public
  */
 
-QueryStream.prototype.resume = function () {
+QueryStream.prototype.resume = function() {
   this.paused = false;
 
   if (!this._cursor) {
@@ -294,17 +319,19 @@ QueryStream.prototype.resume = function () {
     // outside QueryStream control, need manual restart
     return this._next();
   }
-}
+};
 
 /**
- * Destroys the stream, closing the underlying cursor. No more events will be emitted.
+ * Destroys the stream, closing the underlying cursor, which emits the close event. No more events will be emitted after the close event.
  *
  * @param {Error} [err]
  * @api public
  */
 
-QueryStream.prototype.destroy = function (err) {
-  if (this._destroyed) return;
+QueryStream.prototype.destroy = function(err) {
+  if (this._destroyed) {
+    return;
+  }
   this._destroyed = true;
   this._running = false;
   this.readable = false;
@@ -318,7 +345,7 @@ QueryStream.prototype.destroy = function (err) {
   }
 
   this.emit('close');
-}
+};
 
 /**
  * Pipes this query stream into another stream. This method is inherited from NodeJS Streams.

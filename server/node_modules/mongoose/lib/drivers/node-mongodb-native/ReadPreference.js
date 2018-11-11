@@ -13,7 +13,7 @@ var ReadPref = mongodb.ReadPreference;
  * @param {Array} [tags]
  */
 
-module.exports = function readPref (pref, tags) {
+module.exports = function readPref(pref, tags) {
   if (Array.isArray(pref)) {
     tags = pref[1];
     pref = pref[0];
@@ -42,4 +42,4 @@ module.exports = function readPref (pref, tags) {
   }
 
   return new ReadPref(pref, tags);
-}
+};
